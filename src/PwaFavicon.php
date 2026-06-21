@@ -46,6 +46,73 @@ abstract class PwaFavicon
         return $links;
     }
 
+    /**
+     * Standard `<link rel="icon">` PNG tags (favicon shown in the browser tab
+     * and bookmarks). Covers the Android 192 master plus the 32/96/16 desktop
+     * sizes from the realfavicongenerator asset set.
+     *
+     * @return array<int, array{rel: string, type: string, sizes: string, href: string}>
+     */
+    public static function iconHeadLinks(): array
+    {
+        return [
+            ['rel' => 'icon', 'type' => 'image/png', 'sizes' => '192x192', 'href' => Vite::asset('resources/favicon/android-icon-192x192.png')],
+            ['rel' => 'icon', 'type' => 'image/png', 'sizes' => '32x32', 'href' => Vite::asset('resources/favicon/favicon-32x32.png')],
+            ['rel' => 'icon', 'type' => 'image/png', 'sizes' => '96x96', 'href' => Vite::asset('resources/favicon/favicon-96x96.png')],
+            ['rel' => 'icon', 'type' => 'image/png', 'sizes' => '16x16', 'href' => Vite::asset('resources/favicon/favicon-16x16.png')],
+        ];
+    }
+
+    /**
+     * Legacy Windows pinned-tile metas (`msapplication-*`).
+     *
+     * @return array<int, array{name: string, content: string}>
+     */
+    public static function msApplicationMeta(): array
+    {
+        return [
+            ['name' => 'msapplication-TileColor', 'content' => self::tileColor()],
+            ['name' => 'msapplication-TileImage', 'content' => Vite::asset('resources/favicon/ms-icon-144x144.png')],
+        ];
+    }
+
+    /**
+     * Mobile web-app capability metas for the Android + iOS "Add to Home
+     * Screen" install path. `$title` overrides the home-screen label; when
+     * null it falls back to the manifest short_name/name.
+     *
+     * @return array<int, array{name: string, content: string}>
+     */
+    public static function webAppMeta(?string $title = null): array
+    {
+        $title ??= (string) config(
+            'pwa-favicon.manifest.short_name',
+            config('pwa-favicon.manifest.name', config('app.name', 'Laravel'))
+        );
+
+        return [
+            ['name' => 'mobile-web-app-capable', 'content' => 'yes'],
+            ['name' => 'apple-mobile-web-app-capable', 'content' => 'yes'],
+            ['name' => 'apple-mobile-web-app-title', 'content' => $title],
+            ['name' => 'apple-mobile-web-app-status-bar-style', 'content' => (string) config('pwa-favicon.apple_status_bar_style', 'black-translucent')],
+        ];
+    }
+
+    /**
+     * Default PWA theme-color (the top browser-chrome tint — Android address
+     * bar / iOS status bar). Consumers that switch it per theme should pass
+     * their own value to the `pwa-favicon::head` view instead.
+     */
+    public static function themeColor(): string
+    {
+        return (string) config('pwa-favicon.manifest.theme_color', '#ffffff');
+    }
+
+    private static function tileColor(): string
+    {
+        return (string) config('pwa-favicon.tile_color', '#ffffff');
+    }
+
     private static function getManifestJson(): JsonResponse
     {
         $manifest = config('pwa-favicon.manifest', []);
@@ -117,6 +184,7 @@ abstract class PwaFavicon
         $square70x70logo = Vite::asset('resources/favicon/ms-icon-70x70.png');
         $square150x150logo = Vite::asset('resources/favicon/ms-icon-150x150.png');
         $square310x310logo = Vite::asset('resources/favicon/ms-icon-310x310.png');
+        $tileColor = self::tileColor();
         $xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>
 <browserconfig>
     <msapplication>
@@ -124,7 +192,7 @@ abstract class PwaFavicon
             <square70x70logo src=\"{$square70x70logo}\"/>
             <square150x150logo src=\"{$square150x150logo}\"/>
             <square310x310logo src=\"{$square310x310logo}\"/>
-            <TileColor>#ffffff</TileColor>
+            <TileColor>{$tileColor}</TileColor>
         </tile>
     </msapplication>
 </browserconfig>";

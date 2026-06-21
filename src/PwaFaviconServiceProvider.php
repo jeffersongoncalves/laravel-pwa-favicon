@@ -13,7 +13,8 @@ class PwaFaviconServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('laravel-pwa-favicon')
-            ->hasConfigFile();
+            ->hasConfigFile()
+            ->hasViews();
     }
 
     public function packageBooted(): void

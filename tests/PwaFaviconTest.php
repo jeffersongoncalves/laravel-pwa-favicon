@@ -80,3 +80,68 @@ it('builds apple touch icon head links for every iOS size', function () {
         'href' => 'https://cdn.test/resources/favicon/apple-icon-57x57.png',
     ]);
 });
+
+it('builds standard png icon head links', function () {
+    $links = PwaFavicon::iconHeadLinks();
+
+    expect($links)->toHaveCount(4);
+    expect($links[0])->toMatchArray([
+        'rel' => 'icon',
+        'type' => 'image/png',
+        'sizes' => '192x192',
+        'href' => 'https://cdn.test/resources/favicon/android-icon-192x192.png',
+    ]);
+});
+
+it('builds msapplication tile metas using the configured tile color', function () {
+    config()->set('pwa-favicon.tile_color', '#0B0A09');
+
+    $metas = PwaFavicon::msApplicationMeta();
+
+    expect($metas)->toContain(['name' => 'msapplication-TileColor', 'content' => '#0B0A09']);
+    expect($metas)->toContain([
+        'name' => 'msapplication-TileImage',
+        'content' => 'https://cdn.test/resources/favicon/ms-icon-144x144.png',
+    ]);
+});
+
+it('builds web-app metas with the manifest title and configured status bar style', function () {
+    config()->set('pwa-favicon.manifest.short_name', 'My App');
+    config()->set('pwa-favicon.apple_status_bar_style', 'black-translucent');
+
+    $metas = PwaFavicon::webAppMeta();
+
+    expect($metas)->toContain(['name' => 'apple-mobile-web-app-title', 'content' => 'My App']);
+    expect($metas)->toContain(['name' => 'apple-mobile-web-app-status-bar-style', 'content' => 'black-translucent']);
+    expect($metas)->toContain(['name' => 'mobile-web-app-capable', 'content' => 'yes']);
+});
+
+it('lets a caller override the web-app title', function () {
+    expect(PwaFavicon::webAppMeta('Custom'))
+        ->toContain(['name' => 'apple-mobile-web-app-title', 'content' => 'Custom']);
+});
+
+it('exposes the manifest theme color', function () {
+    config()->set('pwa-favicon.manifest.theme_color', '#123456');
+
+    expect(PwaFavicon::themeColor())->toBe('#123456');
+});
+
+it('renders the head view with a custom theme color and theme-color id', function () {
+    $html = view('pwa-favicon::head', ['themeColor' => '#0B0A09'])->render();
+
+    expect($html)
+        ->toContain('<link rel="manifest" href="/manifest.json">')
+        ->toContain('rel="apple-touch-icon"')
+        ->toContain('rel="icon"')
+        ->toContain('name="msapplication-TileColor"')
+        ->toContain('name="mobile-web-app-capable"')
+        ->toContain('id="theme-color-meta"')
+        ->toContain('content="#0B0A09"');
+});
+
+it('omits the theme-color id when an empty id is passed', function () {
+    $html = view('pwa-favicon::head', ['themeColorId' => ''])->render();
+
+    expect($html)->not->toContain('id="theme-color-meta"');
+});
