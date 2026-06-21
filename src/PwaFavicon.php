@@ -8,26 +8,32 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
+use JeffersonGoncalves\PwaFavicon\Http\Controllers\BrowserConfigController;
+use JeffersonGoncalves\PwaFavicon\Http\Controllers\FaviconController;
+use JeffersonGoncalves\PwaFavicon\Http\Controllers\ManifestController;
 
 abstract class PwaFavicon
 {
     public static function routes(): void
     {
         if (config('pwa-favicon.enabled', false)) {
-            Route::any('manifest.json', fn () => self::getManifestJson());
-            Route::any('browserconfig.xml', fn () => self::getBrowserConfigXml());
+            // Invokable controllers (not closures) so the consuming app can
+            // run `php artisan route:cache` in production — closures throw a
+            // "Unable to prepare route for serialization" error there.
+            Route::get('manifest.json', ManifestController::class);
+            Route::get('browserconfig.xml', BrowserConfigController::class);
             if (! empty(config('pwa-favicon.favicon'))) {
-                Route::any('favicon.ico', fn () => self::getFavicon());
+                Route::get('favicon.ico', FaviconController::class);
             }
         }
     }
 
     /**
-     * Apple touch icons + startup splash images for the iOS Safari "Add to
-     * Home Screen" PWA install path. iOS ignores the standard manifest
-     * icons array, so these `<link>` tags must be present in <head>.
+     * Apple touch icons for the iOS Safari "Add to Home Screen" PWA install
+     * path. iOS ignores the standard manifest icons array, so these
+     * `apple-touch-icon` `<link>` tags must be present in <head>.
      *
-     * @return array<int, array{rel: string, sizes?: string, href: string, media?: string}>
+     * @return array<int, array{rel: string, sizes: string, href: string}>
      */
     public static function appleHeadLinks(): array
     {
@@ -113,7 +119,7 @@ abstract class PwaFavicon
         return (string) config('pwa-favicon.tile_color', '#ffffff');
     }
 
-    private static function getManifestJson(): JsonResponse
+    public static function getManifestJson(): JsonResponse
     {
         $manifest = config('pwa-favicon.manifest', []);
 
@@ -179,12 +185,17 @@ abstract class PwaFavicon
         return $icons;
     }
 
-    private static function getBrowserConfigXml(): Response
+    public static function getBrowserConfigXml(): Response
     {
-        $square70x70logo = Vite::asset('resources/favicon/ms-icon-70x70.png');
-        $square150x150logo = Vite::asset('resources/favicon/ms-icon-150x150.png');
-        $square310x310logo = Vite::asset('resources/favicon/ms-icon-310x310.png');
-        $tileColor = self::tileColor();
+        // Every value is interpolated into XML, so escape with ENT_XML1 to
+        // keep a stray `&`/`<`/`"` in a Vite URL or a configured tile colour
+        // from producing a malformed document.
+        $esc = static fn (string $v): string => htmlspecialchars($v, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+
+        $square70x70logo = $esc(Vite::asset('resources/favicon/ms-icon-70x70.png'));
+        $square150x150logo = $esc(Vite::asset('resources/favicon/ms-icon-150x150.png'));
+        $square310x310logo = $esc(Vite::asset('resources/favicon/ms-icon-310x310.png'));
+        $tileColor = $esc(self::tileColor());
         $xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>
 <browserconfig>
     <msapplication>
@@ -200,7 +211,7 @@ abstract class PwaFavicon
         return response($xml, 200, ['Content-Type' => 'application/xml']);
     }
 
-    private static function getFavicon(): Response
+    public static function getFavicon(): Response
     {
         return response(Vite::content(config('pwa-favicon.favicon')), 200, ['Content-Type' => 'image/x-icon']);
     }

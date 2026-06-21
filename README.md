@@ -55,8 +55,17 @@ return [
         ],
     ],
     'favicon' => 'resources/favicon/favicon.ico',
+    'tile_color' => '#ffffff',
+    'apple_status_bar_style' => 'black-translucent',
 ];
 ```
+
+> **Heads up — the `/favicon.ico` route.** When `enabled` is `true` and `favicon`
+> is set, the package registers a PHP `GET /favicon.ico` route. If you also ship a
+> static `public/favicon.ico`, the web server serves the static file first and the
+> PHP route is never reached — so the static file always wins. To force the package
+> to serve the favicon, remove the static `public/favicon.ico`. To disable the PHP
+> route entirely, set `favicon` to `null`.
 
 ## Usage
 
@@ -65,6 +74,39 @@ Once installed, the package registers the following routes at the application ro
 - `GET /manifest.json` — the Web App Manifest (`application/manifest+json`)
 - `GET /browserconfig.xml` — Windows tile configuration (`application/xml`)
 - `GET /favicon.ico` — the favicon (registered only when `pwa-favicon.favicon` is set)
+
+### The `pwa-favicon::head` Blade view
+
+The headline feature is a single Blade view that renders every PWA `<head>` tag —
+icon links, Apple touch icons, the manifest link, `msapplication-*` tile metas, the
+`theme-color` meta, and the web-app capability metas — in one place. Include it once
+in your layout's `<head>` so the markup stays identical across surfaces (a public
+site layout, a Filament panel head hook, etc.):
+
+```blade
+<head>
+    {{-- ... --}}
+    @include('pwa-favicon::head')
+</head>
+```
+
+All parameters are optional:
+
+| Param          | Default                          | Purpose                                                                 |
+| -------------- | -------------------------------- | ----------------------------------------------------------------------- |
+| `themeColor`   | `PwaFavicon::themeColor()`       | The `theme-color` meta value (browser-chrome tint).                     |
+| `manifestUrl`  | `/manifest.json`                 | `href` of the `<link rel="manifest">` tag.                              |
+| `themeColorId` | `theme-color-meta`               | `id` on the `theme-color` meta so client JS can retarget it on a live light/dark toggle. Pass an empty string to omit the `id`. |
+| `title`        | manifest `short_name` / `name`   | Overrides the `apple-mobile-web-app-title` home-screen label.           |
+
+```blade
+@include('pwa-favicon::head', [
+    'themeColor' => '#0B0A09',
+    'manifestUrl' => '/manifest.json',
+    'themeColorId' => 'theme-color-meta',
+    'title' => 'My App',
+])
+```
 
 ### Icon assets
 

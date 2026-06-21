@@ -48,6 +48,23 @@ it('serves browserconfig.xml as application/xml', function () {
         ->toContain('square150x150logo');
 });
 
+it('escapes special characters in the browserconfig.xml tile color', function () {
+    config()->set('pwa-favicon.enabled', true);
+    config()->set('pwa-favicon.tile_color', '#fff" & <bad>');
+
+    PwaFavicon::routes();
+
+    $response = $this->get('/browserconfig.xml');
+
+    $response->assertOk();
+
+    expect($response->getContent())
+        ->toContain('&amp;')
+        ->toContain('&lt;bad&gt;')
+        ->toContain('&quot;')
+        ->not->toContain('<bad>');
+});
+
 it('does not register the routes when disabled', function () {
     config()->set('pwa-favicon.enabled', false);
 
