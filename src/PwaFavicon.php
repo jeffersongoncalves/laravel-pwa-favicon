@@ -91,10 +91,12 @@ abstract class PwaFavicon
      */
     public static function webAppMeta(?string $title = null): array
     {
-        $title ??= (string) config(
-            'pwa-favicon.manifest.short_name',
-            config('pwa-favicon.manifest.name', config('app.name', 'Laravel'))
-        );
+        // `config(key, default)` only returns the default when the key is
+        // absent — an explicit `null`/empty value comes back as-is, so chain
+        // the fallbacks with `?:` to skip blanks down to app.name.
+        $title ??= (string) (config('pwa-favicon.manifest.short_name')
+            ?: config('pwa-favicon.manifest.name')
+            ?: config('app.name', 'Laravel'));
 
         return [
             ['name' => 'mobile-web-app-capable', 'content' => 'yes'],
@@ -213,6 +215,6 @@ abstract class PwaFavicon
 
     public static function getFavicon(): Response
     {
-        return response(Vite::content(config('pwa-favicon.favicon')), 200, ['Content-Type' => 'image/x-icon']);
+        return response(Vite::content((string) config('pwa-favicon.favicon')), 200, ['Content-Type' => 'image/x-icon']);
     }
 }
