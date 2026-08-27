@@ -1,6 +1,6 @@
 ---
 name: pwa-favicon-development
-description: Development guide for laravel-pwa-favicon, a package that serves a spec-shaped PWA manifest.json, browserconfig.xml, favicon.ico, and Apple touch icon head links from config-driven, Vite-resolved icon assets.
+description: Development guide for laravel-pwa-favicon, a package that serves a spec-shaped PWA manifest.json on top of laravel-favicon's browserconfig.xml, favicon.ico, and Apple touch icon head links.
 ---
 
 # PWA Favicon Development Skill
@@ -40,14 +40,17 @@ src/
   PwaFaviconServiceProvider.php   # configurePackage()->name('laravel-pwa-favicon')->hasConfigFile()
                                   # packageBooted() registers routes when enabled
   PwaFavicon.php                  # abstract class of static methods:
-                                  #   routes()          -> registers the 3 routes
-                                  #   appleHeadLinks()  -> apple-touch-icon <link> data
+                                  #   routes()          -> registers /manifest.json
+                                  #   webAppMeta()      -> mobile-web-app-capable metas
+                                  #   themeColor()      -> configured theme-color
                                   #   getManifestJson() -> /manifest.json (private)
                                   #   pwaIcons()        -> spec-shaped icons[] (private)
-                                  #   getBrowserConfigXml() -> /browserconfig.xml (private)
-                                  #   getFavicon()      -> /favicon.ico (private)
 config/
-  pwa-favicon.php                 # enabled, manifest{...}, favicon
+  pwa-favicon.php                 # enabled, manifest{...}, apple_status_bar_style
+
+favicon.ico, browserconfig.xml, Apple touch icons, and PNG icon links come from
+the jeffersongoncalves/laravel-favicon dependency (its own src/Favicon.php and
+config/favicon.php) — see that package's favicon-development skill.
 ```
 
 ## How It Works
@@ -68,6 +71,9 @@ public function packageBooted(): void
 ```
 
 `PwaFavicon::routes()` also re-checks the flag, so it is safe to call directly.
+`laravel-favicon`'s own service provider independently registers `/browserconfig.xml`
+and `/favicon.ico` from its own `favicon.enabled` config — the two packages don't
+call into each other's `routes()`.
 
 ### Manifest icon builder
 
@@ -82,8 +88,8 @@ Every `src` goes through `Vite::asset(...)`, so the PNGs must exist under the co
 ### Content types
 
 - `/manifest.json` → `application/manifest+json` (the W3C type, not generic `application/json`).
-- `/browserconfig.xml` → `application/xml`.
-- `/favicon.ico` → `image/x-icon` (served via `Vite::content(...)`).
+- `/browserconfig.xml` (laravel-favicon) → `application/xml`.
+- `/favicon.ico` (laravel-favicon) → `image/x-icon` (served via `Vite::content(...)`).
 
 ## Testing Patterns
 
@@ -125,10 +131,9 @@ it('serves the manifest with a 512 any and maskable icon', function () {
     ]);
 });
 
-it('404s every route when disabled', function () {
+it('404s the manifest route when disabled', function () {
     config()->set('pwa-favicon.enabled', false);
     $this->get('/manifest.json')->assertNotFound();
-    $this->get('/browserconfig.xml')->assertNotFound();
 });
 ```
 
@@ -159,4 +164,7 @@ vendor/bin/pint
 1. To add another Android density, add a `size => density` pair to `manifest.icons` and ship `resources/favicon/android-icon-{size}x{size}.png`.
 2. To add a new purpose (e.g. `monochrome`), append an entry in `PwaFavicon::pwaIcons()` and ship the asset.
 3. Cover the new entry in the manifest test via `toContain([...])`.
+
+Apple touch icons, desktop PNG icon links, and MS tile icons are added in the
+`laravel-favicon` package instead — see its favicon-development skill.
 ```

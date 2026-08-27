@@ -1,6 +1,6 @@
 {
     "name": "jeffersongoncalves/laravel-pwa-favicon",
-    "description": "This Laravel package serves a spec-shaped PWA `manifest.json` (with Android density icons, a 512px master icon, and a maskable variant), a `browserconfig.xml` for Windows tiles, a `favicon.ico` route, and Apple touch icon head links. It turns any Laravel application into an installable Progressive Web App with sensible, publishable defaults.",
+    "description": "This Laravel package serves a spec-shaped PWA `manifest.json` (with Android density icons, a 512px master icon, and a maskable variant) on top of jeffersongoncalves/laravel-favicon's favicon.ico, browserconfig.xml, and Apple touch icon head links. It turns any Laravel application into an installable Progressive Web App with sensible, publishable defaults.",
     "keywords": [
         "jeffersongoncalves",
         "laravel",
@@ -19,6 +19,7 @@
         "php": "^8.2",
         "illuminate/support": "^11.0|^12.0|^13.0",
         "illuminate/routing": "^11.0|^12.0|^13.0",
+        "jeffersongoncalves/laravel-favicon": "^1.0",
         "spatie/laravel-package-tools": "^1.14.0"
     },
     "require-dev": {

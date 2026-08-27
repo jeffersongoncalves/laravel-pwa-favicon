@@ -5,6 +5,7 @@ namespace JeffersonGoncalves\PwaFavicon\Tests;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Foundation\Vite as FoundationVite;
 use Illuminate\Support\Facades\Vite;
+use JeffersonGoncalves\Favicon\FaviconServiceProvider;
 use JeffersonGoncalves\PwaFavicon\PwaFaviconServiceProvider;
 use Mockery;
 use Orchestra\Testbench\TestCase as Orchestra;
@@ -32,6 +33,7 @@ class TestCase extends Orchestra
     protected function getPackageProviders($app)
     {
         return [
+            FaviconServiceProvider::class,
             PwaFaviconServiceProvider::class,
         ];
     }
@@ -46,5 +48,6 @@ class TestCase extends Orchestra
         // this value (existing keys win), while still pulling the manifest /
         // icons defaults from the package config file.
         config()->set('pwa-favicon.enabled', false);
+        config()->set('favicon.enabled', false);
     }
 }

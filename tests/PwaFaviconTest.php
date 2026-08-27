@@ -31,95 +31,16 @@ it('serves the manifest as application/manifest+json with 512 any and maskable i
         ]);
 });
 
-it('serves browserconfig.xml as application/xml', function () {
-    config()->set('pwa-favicon.enabled', true);
-
-    PwaFavicon::routes();
-
-    $response = $this->get('/browserconfig.xml');
-
-    $response->assertOk();
-
-    expect($response->headers->get('Content-Type'))
-        ->toContain('application/xml');
-
-    expect($response->getContent())
-        ->toContain('<browserconfig>')
-        ->toContain('square150x150logo');
-});
-
-it('escapes special characters in the browserconfig.xml tile color', function () {
-    config()->set('pwa-favicon.enabled', true);
-    config()->set('pwa-favicon.tile_color', '#fff" & <bad>');
-
-    PwaFavicon::routes();
-
-    $response = $this->get('/browserconfig.xml');
-
-    $response->assertOk();
-
-    expect($response->getContent())
-        ->toContain('&amp;')
-        ->toContain('&lt;bad&gt;')
-        ->toContain('&quot;')
-        ->not->toContain('<bad>');
-});
-
-it('does not register the routes when disabled', function () {
+it('does not register the manifest route when disabled', function () {
     config()->set('pwa-favicon.enabled', false);
 
     $this->get('/manifest.json')->assertNotFound();
-    $this->get('/browserconfig.xml')->assertNotFound();
-    $this->get('/favicon.ico')->assertNotFound();
 });
 
-it('serves the favicon.ico when a favicon path is configured', function () {
-    config()->set('pwa-favicon.enabled', true);
-    config()->set('pwa-favicon.favicon', 'resources/favicon/favicon.ico');
+it('exposes the manifest theme color', function () {
+    config()->set('pwa-favicon.manifest.theme_color', '#123456');
 
-    PwaFavicon::routes();
-
-    $response = $this->get('/favicon.ico');
-
-    $response->assertOk();
-
-    expect($response->headers->get('Content-Type'))->toContain('image/x-icon');
-});
-
-it('builds apple touch icon head links for every iOS size', function () {
-    $links = PwaFavicon::appleHeadLinks();
-
-    expect($links)->toHaveCount(9);
-
-    expect($links[0])->toMatchArray([
-        'rel' => 'apple-touch-icon',
-        'sizes' => '57x57',
-        'href' => 'https://cdn.test/resources/favicon/apple-icon-57x57.png',
-    ]);
-});
-
-it('builds standard png icon head links', function () {
-    $links = PwaFavicon::iconHeadLinks();
-
-    expect($links)->toHaveCount(4);
-    expect($links[0])->toMatchArray([
-        'rel' => 'icon',
-        'type' => 'image/png',
-        'sizes' => '192x192',
-        'href' => 'https://cdn.test/resources/favicon/android-icon-192x192.png',
-    ]);
-});
-
-it('builds msapplication tile metas using the configured tile color', function () {
-    config()->set('pwa-favicon.tile_color', '#0B0A09');
-
-    $metas = PwaFavicon::msApplicationMeta();
-
-    expect($metas)->toContain(['name' => 'msapplication-TileColor', 'content' => '#0B0A09']);
-    expect($metas)->toContain([
-        'name' => 'msapplication-TileImage',
-        'content' => 'https://cdn.test/resources/favicon/ms-icon-144x144.png',
-    ]);
+    expect(PwaFavicon::themeColor())->toBe('#123456');
 });
 
 it('builds web-app metas with the manifest title and configured status bar style', function () {
@@ -138,10 +59,13 @@ it('lets a caller override the web-app title', function () {
         ->toContain(['name' => 'apple-mobile-web-app-title', 'content' => 'Custom']);
 });
 
-it('exposes the manifest theme color', function () {
-    config()->set('pwa-favicon.manifest.theme_color', '#123456');
+it('falls back to app.name for the web-app title when no manifest name is set', function () {
+    config()->set('app.name', 'Fallback App');
+    config()->set('pwa-favicon.manifest.short_name', null);
+    config()->set('pwa-favicon.manifest.name', null);
 
-    expect(PwaFavicon::themeColor())->toBe('#123456');
+    expect(PwaFavicon::webAppMeta())
+        ->toContain(['name' => 'apple-mobile-web-app-title', 'content' => 'Fallback App']);
 });
 
 it('renders the head view with a custom theme color and theme-color id', function () {
@@ -163,14 +87,14 @@ it('omits the theme-color id when an empty id is passed', function () {
     expect($html)->not->toContain('id="theme-color-meta"');
 });
 
-it('emits the msapplication-config meta pointing at browserconfig.xml', function () {
+it('emits the msapplication-config meta pointing at browserconfig.xml via the favicon package', function () {
     $html = view('pwa-favicon::head')->render();
 
     expect($html)->toContain('<meta name="msapplication-config" content="/browserconfig.xml">');
 });
 
-it('lets the browserconfig url be overridden via config', function () {
-    config()->set('pwa-favicon.browserconfig_url', '/pwa/browserconfig.xml');
+it('lets the browserconfig url be overridden via the favicon package config', function () {
+    config()->set('favicon.browserconfig_url', '/pwa/browserconfig.xml');
 
     $html = view('pwa-favicon::head')->render();
 
@@ -215,36 +139,4 @@ it('builds android density icons from the manifest icons map', function () {
         'type' => 'image/png',
         'density' => '4.0',
     ]);
-});
-
-it('returns the favicon body content from Vite', function () {
-    config()->set('pwa-favicon.enabled', true);
-    config()->set('pwa-favicon.favicon', 'resources/favicon/favicon.ico');
-
-    PwaFavicon::routes();
-
-    $response = $this->get('/favicon.ico');
-
-    $response->assertOk();
-    expect($response->getContent())->toBe('fake-favicon-content');
-});
-
-it('does not register the favicon route when the favicon path is empty', function () {
-    config()->set('pwa-favicon.enabled', true);
-    config()->set('pwa-favicon.favicon', '');
-
-    PwaFavicon::routes();
-
-    $this->get('/favicon.ico')->assertNotFound();
-    // The other routes are still registered.
-    $this->get('/manifest.json')->assertOk();
-});
-
-it('falls back to app.name for the web-app title when no manifest name is set', function () {
-    config()->set('app.name', 'Fallback App');
-    config()->set('pwa-favicon.manifest.short_name', null);
-    config()->set('pwa-favicon.manifest.name', null);
-
-    expect(PwaFavicon::webAppMeta())
-        ->toContain(['name' => 'apple-mobile-web-app-title', 'content' => 'Fallback App']);
 });
