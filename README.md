@@ -1,6 +1,6 @@
 <div class="filament-hidden">
 
-![Laravel PWA Favicon](https://raw.githubusercontent.com/jeffersongoncalves/laravel-pwa-favicon/master/art/jeffersongoncalves-laravel-pwa-favicon.png)
+![Laravel PWA Favicon](https://raw.githubusercontent.com/jeffersongoncalves/laravel-pwa-favicon/main/art/jeffersongoncalves-laravel-pwa-favicon.png)
 
 </div>
 
@@ -9,8 +9,8 @@
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-FFDD00?style=flat-square&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/jeffersongoncalves)
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/jeffersongoncalves/laravel-pwa-favicon.svg?style=flat-square)](https://packagist.org/packages/jeffersongoncalves/laravel-pwa-favicon)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/jeffersongoncalves/laravel-pwa-favicon/tests.yml?branch=master&label=tests&style=flat-square)](https://github.com/jeffersongoncalves/laravel-pwa-favicon/actions?query=workflow%3Arun-tests+branch%3Amaster)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/jeffersongoncalves/laravel-pwa-favicon/fix-php-code-style-issues.yml?branch=master&label=code%20style&style=flat-square)](https://github.com/jeffersongoncalves/laravel-pwa-favicon/actions?query=workflow%3A"Fix+PHP+code+styling"+branch%3Amaster)
+[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/jeffersongoncalves/laravel-pwa-favicon/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/jeffersongoncalves/laravel-pwa-favicon/actions?query=workflow%3Arun-tests+branch%3Amain)
+[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/jeffersongoncalves/laravel-pwa-favicon/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/jeffersongoncalves/laravel-pwa-favicon/actions?query=workflow%3A"Fix+PHP+code+styling"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/jeffersongoncalves/laravel-pwa-favicon.svg?style=flat-square)](https://packagist.org/packages/jeffersongoncalves/laravel-pwa-favicon)
 
 This Laravel package serves a spec-shaped PWA `manifest.json` (with Android density icons, a 512px master icon, and a maskable variant) on top of [`jeffersongoncalves/laravel-favicon`](https://github.com/jeffersongoncalves/laravel-favicon)'s `favicon.ico` route, `browserconfig.xml`, and Apple touch icon head links. It turns any Laravel application into an installable Progressive Web App with sensible, publishable defaults.
